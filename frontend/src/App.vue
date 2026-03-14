@@ -24,7 +24,7 @@
       <header class="main-header">
         <h1>Nos <span>Recherches</span></h1>
         <button @click="openModal()" class="btn btn-primary btn-add-house">
-          <i class="fa-solid fa-plus"></i> Ajouter une maison
+          <i class="fa-solid fa-plus"></i> <span>Ajouter</span>
         </button>
       </header>
 
@@ -37,45 +37,46 @@
         ghost-class="sortable-ghost"
       >
         <template #item="{ element, index }">
-          <div class="house-card">
-            <div class="rank-controls handle">
-              <i class="fa-solid fa-grip-vertical"></i>
-              <span class="rank-num">#{{ index + 1 }}</span>
-            </div>
-
-            <div class="image-container">
-              <img 
-                :src="element.image || 'https://via.placeholder.com/400x300?text=Pas+d\'image'" 
-                class="house-img"
-              >
-            </div>
-
-            <div class="house-info">
-              <div class="house-header">
-                <div class="title-group">
-                  <h3>{{ element.titre }}</h3>
-                  <p class="location">
-                    <i class="fa-solid fa-location-dot"></i> {{ element.lieu }}
-                  </p>
+          <div class="house-card-wrapper">
+            <a :href="element.lien" target="_blank" class="house-card-link">
+              <div class="house-card">
+                <div class="rank-controls handle">
+                  <i class="fa-solid fa-grip-vertical"></i>
+                  <span class="rank-num">#{{ index + 1 }}</span>
                 </div>
-                <span class="price">{{ element.prix }}€</span>
+                
+                <div class="image-container">
+                  <img 
+                  :src="element.image || 'https://via.placeholder.com/400x300?text=Pas+d\'image'" 
+                  class="house-img"
+                  >
+                </div>
+                
+                <div class="house-info">
+                  <div class="house-header">
+                    <div class="title-group">
+                      <h3>{{ element.titre }}</h3>
+                      <p class="location">
+                        <i class="fa-solid fa-location-dot"></i> {{ element.lieu }}
+                      </p>
+                    </div>
+                    <span class="price">{{ formatPrix(element.prix) }}€</span>
+                  </div>
+                  
+                  <div class="stats">
+                    <span><i class="fa-solid fa-bed"></i> {{ element.chambres }} ch.</span>
+                    <span><i class="fa-solid fa-house-chimney"></i> {{ element.surface }}m²</span>                    
+                  </div>
+                  
+                  <p v-if="element.commentaire" class="note">"{{ element.commentaire }}"</p>
+                  
+                  <div class="actions">
+                    <button @click="openModal(element)" class="btn-action btn-edit"><i class="fa-solid fa-pen"></i></button>
+                    <button @click="remove(index)" class="btn-action btn-delete"><i class="fa-solid fa-trash"></i></button>
+                  </div>
+                </div>
               </div>
-
-              <div class="stats">
-                <span><i class="fa-solid fa-bed"></i> {{ element.chambres }} ch.</span>
-                <span><i class="fa-solid fa-house-chimney"></i> {{ element.surface }}m²</span>
-                <a :href="element.lien" target="_blank" class="link-icon">
-                  <i class="fa-solid fa-up-right-from-square"></i>
-                </a>
-              </div>
-              
-              <p v-if="element.commentaire" class="note">"{{ element.commentaire }}"</p>
-
-              <div class="actions">
-                <button @click="openModal(element)" class="btn-action btn-edit"><i class="fa-solid fa-pen"></i></button>
-                <button @click="remove(index)" class="btn-action btn-delete"><i class="fa-solid fa-trash"></i></button>
-              </div>
-            </div>
+            </a>
           </div>
         </template>
       </draggable>
@@ -127,7 +128,47 @@ export default {
       apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api/maisons',
     };
   },
+  async mounted() {
+    const savedPwd = localStorage.getItem('maison_auth_pwd');
+    if (savedPwd) {
+      const isValid = await this.verifyPassword(savedPwd);
+      if(isValid) {
+        this.password = savedPwd;
+        this.isAuth = true;
+        this.fetchMaisons();
+        return;
+      }
+
+      this.logout();
+    }
+  },
   methods: {
+    async verifyPassword(pwd) {
+      try {
+        const authUrl = this.apiUrl.replace('/maisons', '/verify-auth');
+        const res = await fetch(authUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pwd })
+        });
+        const data = await res.json();
+        return data.success;
+      } catch (e) {
+        console.error("Erreur auth", e);
+        return false;
+      }
+    },
+    logout() {
+      localStorage.removeItem('maison_auth_pwd');
+      this.isAuth = false;
+      this.password = '';
+      this.maisons = [];
+    },
+    formatPrix(valeur) {
+      if (!valeur) return "0";
+      // Transforme en nombre si c'est une chaîne, puis formate
+      return Number(valeur).toLocaleString('fr-FR');
+    },
     async login() {
       // On tente de charger les maisons avec le mot de passe saisi
       try {
@@ -191,100 +232,215 @@ export default {
 </script>
 
 <style scoped>
+/* --- VARIABLES & BASE --- */
 :root {
   --primary: #4f46e5;
+  --primary-hover: #4338ca;
   --bg: #f8fafc;
+  --white: #ffffff;
   --border: #e2e8f0;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --header-height: 80px;
 }
 
-.container { max-width: 1000px; margin: 0 auto; padding: 40px 20px; font-family: sans-serif; }
-
-/* --- LOGIN DESIGN --- */
-.login-box {
-  background: white;
-  padding: 60px 40px;
-  border-radius: 40px;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
-  max-width: 450px;
-  margin: 10vh auto;
-  text-align: center;
+.container { 
+  max-width: 1000px; 
+  margin: 0 auto; 
+  padding: 20px;
+  /* On ajoute un padding-top pour compenser le header fixe */
+  padding-top: calc(var(--header-height) + 20px); 
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--bg);
+  min-height: 100vh;
 }
 
-.login-content h1 { font-size: 2.5rem; margin-bottom: 8px; font-weight: 900; }
-.login-content h1 span { color: var(--primary); }
-.login-subtitle { color: #94a3b8; margin-bottom: 40px; font-size: 1rem; }
-
-.login-form { display: flex; flex-direction: column; gap: 15px; align-items: center; }
-
-.styled-input {
-  width: 100%;
-  max-width: 300px;
-  padding: 15px 20px;
-  border: 2px solid #f1f5f9;
-  border-radius: 15px;
-  background: #f8fafc;
-  outline: none;
-  transition: all 0.3s;
-  font-size: 1rem;
-}
-
-.styled-input:focus { border-color: var(--primary); background: white; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-
-.btn-login { width: 100%; max-width: 300px; padding: 15px; font-size: 1.1rem; border-radius: 15px; }
-
-/* --- HEADER & BOUTON AJOUT --- */
-.main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-.main-header h1 { font-style: italic; font-weight: 800; }
-.main-header h1 span { color: var(--primary); }
-
-.btn-add-house { 
-  width: auto !important; /* Force la largeur auto */
-  padding: 12px 24px !important; 
-  flex: none !important;
-  font-size: 0.95rem;
-}
-
-/* --- CARDS --- */
-.house-card {
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  display: flex;
-  margin-bottom: 20px;
-  overflow: hidden;
+/* --- HEADER FIXE --- */
+.main-header { 
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  z-index: 1000;
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 0 5%;
+  border-bottom: 1px solid var(--border);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 
-.rank-controls { background: #f8fafc; width: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); color: #cbd5e1; }
-.handle { cursor: grab; }
+.main-header h1 { font-style: italic; font-weight: 800; font-size: 1.5rem; margin: 0; }
+.main-header h1 span { color: var(--primary); }
 
-.image-container { width: 220px; height: 160px; overflow: hidden; flex-shrink: 0; }
-.house-img { width: 100%; height: 100%; object-fit: cover; }
+/* --- BOUTONS STYLISÉS --- */
+.btn { 
+  border: none; 
+  font-weight: 700; 
+  cursor: pointer; 
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex; 
+  align-items: center; 
+  justify-content: center; 
+  gap: 8px;
+  border-radius: 12px;
+  white-space: nowrap;
+}
 
-.house-info { padding: 20px 25px; flex: 1; display: flex; flex-direction: column; }
-.house-header { display: flex; justify-content: space-between; align-items: flex-start; }
-.price { color: var(--primary); font-weight: 900; font-size: 1.5rem; }
-.stats { margin-top: 15px; display: flex; gap: 20px; font-size: 0.9rem; color: #475569; font-weight: 600; }
-.note { font-style: italic; font-size: 0.85rem; background: #f1f5f9; padding: 12px; border-radius: 12px; margin-top: 15px; color: #64748b; }
+.btn-primary { 
+  background: var(--primary); 
+  color: white; 
+  padding: 12px 20px;
+  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
+}
 
-/* --- ACTIONS --- */
+.btn-primary:hover { 
+  background: var(--primary-hover);
+  transform: translateY(-2px); 
+  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.23);
+}
+
+.btn-add-house { 
+  height: 45px;
+}
+
+/* --- CARDS RESPONSIVE --- */
+.house-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  display: flex;
+  margin-bottom: 24px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.house-card:hover {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+}
+
+.rank-controls { 
+  background: #f1f5f9; 
+  width: 50px; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  border-right: 1px solid var(--border); 
+  color: #94a3b8; 
+}
+
+.image-container { 
+  width: 250px; 
+  height: 180px; 
+  overflow: hidden; 
+  flex-shrink: 0; 
+}
+
+.house-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
+.house-card:hover .house-img { transform: scale(1.05); }
+
+.house-info { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+.price { color: var(--primary); font-weight: 900; font-size: 1.4rem; }
+.location { color: var(--text-muted); font-size: 0.9rem; margin: 5px 0; }
+
+/* --- ACTIONS (EDIT/DELETE) --- */
 .actions { margin-top: auto; display: flex; justify-content: flex-end; gap: 10px; }
-.btn-action { background: #f8fafc; border: 1px solid #e2e8f0; width: 40px; height: 40px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; color: #94a3b8; }
+.btn-action { 
+  background: #f8fafc; 
+  border: 1px solid var(--border); 
+  width: 42px; height: 42px; 
+  border-radius: 10px; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+  color: #64748b; 
+}
 .btn-edit:hover { background: #fffbeb; color: #d97706; border-color: #fde68a; }
 .btn-delete:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
 
-/* --- MODAL & BUTTONS --- */
-.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 2000; }
-.modal-content { background: white; width: 95%; max-width: 550px; padding: 35px; border-radius: 30px; }
-.row { display: flex; gap: 15px; }
-.row .input-group { flex: 1; }
-.input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 15px; text-align: left; }
-.input-group label { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
-.input-group input, .input-group textarea { padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+/* --- MOBILE OPTIMIZATION ( < 768px ) --- */
+@media (max-width: 768px) {
+  .container { padding-top: calc(var(--header-height) + 10px); }
 
-.btn { border: none; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4); }
-.btn-secondary { background: #f1f5f9; color: #64748b; padding: 12px 20px; border-radius: 12px; }
-.close-modal { background: none; border: none; font-size: 2rem; cursor: pointer; color: #cbd5e1; }
+  .main-header { padding: 0 15px; }
+  .main-header h1 { font-size: 1.2rem; }
+  
+  /* On cache le texte du bouton sur mobile pour ne laisser que le + */
+  .btn-add-house span { display: none; }
+  .btn-add-house { width: 45px; border-radius: 50%; padding: 0; }
+
+  .house-card { 
+    flex-direction: column; /* Empilage vertical */
+    border-radius: 20px;
+  }
+
+  .rank-controls { 
+    width: 100%; 
+    height: 40px; 
+    flex-direction: row; 
+    border-right: none; 
+    border-bottom: 1px solid var(--border); 
+    gap: 10px;
+  }
+
+  .image-container { 
+    width: 100%; 
+    height: 220px; 
+  }
+
+  .house-info { padding: 15px; }
+  .price { font-size: 1.3rem; }
+  
+  .stats { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr 1fr; 
+    gap: 10px; 
+    margin-top: 15px;
+  }
+}
+
+/* --- LOGIN (Optionnel mais propre) --- */
+.login-box {
+  padding: 40px 20px;
+  /* Le login n'a pas besoin du padding-top du header fixe */
+  margin: 15vh auto; 
+}
+/* --- Nouveaux styles pour le lien global --- */
+.house-card-link {
+  text-decoration: none;
+  color: inherit; /* Garde vos couleurs de texte */
+  display: block;
+  margin-bottom: 24px;
+}
+
+.house-card {
+  margin-bottom: 0; /* On gère la marge sur le lien maintenant */
+  cursor: pointer;
+}
+
+/* Effet de zoom sur l'image au survol de la carte-lien */
+.house-card-link:hover .house-img {
+  transform: scale(1.05);
+}
+
+.house-card-link:hover .house-card {
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary); /* Optionnel : colore la bordure au survol */
+}
+
+/* On s'assure que les boutons d'action restent au-dessus et cliquables */
+.actions {
+  position: relative;
+  z-index: 10;
+}
+
+/* Correction pour mobile : s'assurer que le lien prend bien toute la largeur */
+@media (max-width: 768px) {
+  .house-card-link {
+    margin-bottom: 20px;
+  }
+}
 </style>
