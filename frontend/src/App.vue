@@ -71,8 +71,8 @@
                   <p v-if="element.commentaire" class="note">"{{ element.commentaire }}"</p>
                   
                   <div class="actions">
-                    <button @click="openModal(element)" class="btn-action btn-edit"><i class="fa-solid fa-pen"></i></button>
-                    <button @click="remove(index)" class="btn-action btn-delete"><i class="fa-solid fa-trash"></i></button>
+                    <button @click.stop.prevent="openModal(element)" class="btn-action btn-edit"><i class="fa-solid fa-pen"></i></button>
+                    <button @click.stop.prevent="remove(index)" class="btn-action btn-delete"><i class="fa-solid fa-trash"></i></button>
                   </div>
                 </div>
               </div>
@@ -241,206 +241,173 @@ export default {
   --border: #e2e8f0;
   --text-main: #1e293b;
   --text-muted: #64748b;
-  --header-height: 80px;
+  --header-height: 150px;
 }
 
+/* On n'ajoute le padding que si l'utilisateur est logué pour ne pas décentrer le login */
 .container { 
   max-width: 1000px; 
   margin: 0 auto; 
   padding: 20px;
-  /* On ajoute un padding-top pour compenser le header fixe */
-  padding-top: calc(var(--header-height) + 20px); 
   font-family: 'Inter', system-ui, sans-serif;
   background-color: var(--bg);
   min-height: 100vh;
 }
 
-/* --- HEADER FIXE --- */
-.main-header { 
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: var(--header-height);
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  z-index: 1000;
-  display: flex; 
-  justify-content: space-between; 
-  align-items: center; 
-  padding: 0 5%;
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+.auth-container {
+  padding-top: calc(var(--header-height) + 20px); 
 }
 
+/* --- RÉPARATION DU LOGIN (Vu sur ta capture) --- */
+.login-box {
+  background: white;
+  padding: 60px 40px;
+  border-radius: 40px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+  max-width: 450px;
+  margin: 10vh auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-content h1 { font-size: 2.5rem; margin-bottom: 8px; font-weight: 900; }
+.login-content h1 span { color: var(--primary); }
+.login-subtitle { color: #94a3b8; margin-bottom: 40px; font-size: 1rem; }
+
+.login-form { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 15px; 
+  width: 100%; /* Important pour que l'input ne soit pas écrasé */
+  max-width: 320px;
+}
+
+.styled-input {
+  width: 100%;
+  padding: 15px 20px;
+  border: 2px solid #f1f5f9;
+  border-radius: 15px;
+  background: #f8fafc;
+  outline: none;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.styled-input:focus { border-color: var(--primary); background: white; }
+
+.btn-login { 
+  width: 100%; 
+  padding: 15px; 
+  font-size: 1.1rem; 
+  border-radius: 15px; 
+}
+
+/* --- RÉPARATION DE LA MODALE --- */
+.modal-overlay { 
+  position: fixed; 
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.7); 
+  backdrop-filter: blur(5px);
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  z-index: 2000; /* Plus haut que le header */
+  padding: 15px;
+}
+
+.modal-content { 
+  background: white; 
+  width: 100%;
+  max-width: 550px; 
+  padding: 30px; 
+  border-radius: 30px; 
+  max-height: 90vh; /* Scrollable si trop grand */
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.modal-header h2 { margin: 0; font-weight: 800; color: var(--text-main); }
+.close-modal { background: none; border: none; font-size: 2rem; cursor: pointer; color: #cbd5e1; }
+
+.form-grid { display: flex; flex-direction: column; gap: 15px; }
+.input-group { display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.input-group label { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; }
+.input-group input, .input-group textarea { 
+  padding: 12px; 
+  border: 1px solid var(--border); 
+  border-radius: 12px; 
+  background: #f8fafc; 
+  font-size: 1rem;
+}
+.row { display: flex; gap: 15px; }
+.row .input-group { flex: 1; }
+
+.modal-footer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+/* --- TES CSS QUI FONCTIONNENT (On ne touche pas) --- */
+.main-header { 
+  position: fixed; top: 0; left: 0; right: 0; height: var(--header-height);
+  background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px);
+  z-index: 1000; display: flex; justify-content: space-between; 
+  align-items: center; padding: 0 5%; border-bottom: 1px solid var(--border);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
 .main-header h1 { font-style: italic; font-weight: 800; font-size: 1.5rem; margin: 0; }
 .main-header h1 span { color: var(--primary); }
 
-/* --- BOUTONS STYLISÉS --- */
-.btn { 
-  border: none; 
-  font-weight: 700; 
-  cursor: pointer; 
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex; 
-  align-items: center; 
-  justify-content: center; 
-  gap: 8px;
-  border-radius: 12px;
-  white-space: nowrap;
-}
+.btn { border: none; font-weight: 700; cursor: pointer; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 12px; white-space: nowrap; }
+.btn-primary { background: var(--primary); color: white; padding: 12px 20px; box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39); }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(79, 70, 229, 0.23); }
+.btn-secondary { background: #f1f5f9; color: #64748b; padding: 12px 20px; border-radius: 12px; }
 
-.btn-primary { 
-  background: var(--primary); 
-  color: white; 
-  padding: 12px 20px;
-  box-shadow: 0 4px 14px 0 rgba(79, 70, 229, 0.39);
-}
-
-.btn-primary:hover { 
-  background: var(--primary-hover);
-  transform: translateY(-2px); 
-  box-shadow: 0 6px 20px rgba(79, 70, 229, 0.23);
-}
-
-.btn-add-house { 
-  height: 45px;
-}
-
-/* --- CARDS RESPONSIVE --- */
-.house-card {
-  background: var(--white);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  display: flex;
-  margin-bottom: 24px;
-  overflow: hidden;
-  transition: all 0.3s ease;
-}
-
-.house-card:hover {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-}
-
-.rank-controls { 
-  background: #f1f5f9; 
-  width: 50px; 
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
-  justify-content: center; 
-  border-right: 1px solid var(--border); 
-  color: #94a3b8; 
-}
-
-.image-container { 
-  width: 250px; 
-  height: 180px; 
-  overflow: hidden; 
-  flex-shrink: 0; 
-}
-
+.house-card { background: var(--white); border: 1px solid var(--border); border-radius: 24px; display: flex; overflow: hidden; transition: all 0.3s ease; }
+.rank-controls { background: #f1f5f9; width: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; border-right: 1px solid var(--border); color: #94a3b8; }
+.handle { cursor: grab; }
+.image-container { width: 250px; height: 180px; overflow: hidden; flex-shrink: 0; }
 .house-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s; }
-.house-card:hover .house-img { transform: scale(1.05); }
-
 .house-info { padding: 20px; flex: 1; display: flex; flex-direction: column; }
 .price { color: var(--primary); font-weight: 900; font-size: 1.4rem; }
 .location { color: var(--text-muted); font-size: 0.9rem; margin: 5px 0; }
-
-/* --- ACTIONS (EDIT/DELETE) --- */
-.actions { margin-top: auto; display: flex; justify-content: flex-end; gap: 10px; }
-.btn-action { 
-  background: #f8fafc; 
-  border: 1px solid var(--border); 
-  width: 42px; height: 42px; 
-  border-radius: 10px; 
-  cursor: pointer; 
-  transition: all 0.2s; 
-  color: #64748b; 
-}
+.stats { margin-top: 15px; display: flex; gap: 20px; font-size: 0.9rem; color: #475569; font-weight: 600; }
+.note { font-style: italic; font-size: 0.85rem; background: #f1f5f9; padding: 12px; border-radius: 12px; margin-top: 15px; color: #64748b; }
+.actions { margin-top: auto; display: flex; justify-content: flex-end; gap: 10px; position: relative; z-index: 10; }
+.btn-action { background: #f8fafc; border: 1px solid var(--border); width: 42px; height: 42px; border-radius: 10px; cursor: pointer; transition: all 0.2s; color: #64748b; display: flex; align-items: center; justify-content: center; }
 .btn-edit:hover { background: #fffbeb; color: #d97706; border-color: #fde68a; }
 .btn-delete:hover { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
 
-/* --- MOBILE OPTIMIZATION ( < 768px ) --- */
-@media (max-width: 768px) {
-  .container { padding-top: calc(var(--header-height) + 10px); }
+.house-card-link { text-decoration: none; color: inherit; display: block; margin-bottom: 24px; }
+.house-card-link:hover .house-img { transform: scale(1.05); }
+.house-card-link:hover .house-card { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); border-color: var(--primary); }
 
+/* --- MOBILE OPTIMIZATION --- */
+@media (max-width: 768px) {
+  .auth-container { padding-top: calc(var(--header-height) + 10px); }
   .main-header { padding: 0 15px; }
   .main-header h1 { font-size: 1.2rem; }
-  
-  /* On cache le texte du bouton sur mobile pour ne laisser que le + */
   .btn-add-house span { display: none; }
-  .btn-add-house { width: 45px; border-radius: 50%; padding: 0; }
-
-  .house-card { 
-    flex-direction: column; /* Empilage vertical */
-    border-radius: 20px;
-  }
-
-  .rank-controls { 
-    width: 100%; 
-    height: 40px; 
-    flex-direction: row; 
-    border-right: none; 
-    border-bottom: 1px solid var(--border); 
-    gap: 10px;
-  }
-
-  .image-container { 
-    width: 100%; 
-    height: 220px; 
-  }
-
+  .btn-add-house { width: 40px; border-radius: 50%; padding: 0; height: 40px; }
+  .house-card { flex-direction: column; border-radius: 20px; }
+  .rank-controls { width: 100%; height: 40px; flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); gap: 10px; }
+  .image-container { width: 100%; height: 220px; }
   .house-info { padding: 15px; }
   .price { font-size: 1.3rem; }
-  
-  .stats { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr 1fr; 
-    gap: 10px; 
-    margin-top: 15px;
-  }
-}
-
-/* --- LOGIN (Optionnel mais propre) --- */
-.login-box {
-  padding: 40px 20px;
-  /* Le login n'a pas besoin du padding-top du header fixe */
-  margin: 15vh auto; 
-}
-/* --- Nouveaux styles pour le lien global --- */
-.house-card-link {
-  text-decoration: none;
-  color: inherit; /* Garde vos couleurs de texte */
-  display: block;
-  margin-bottom: 24px;
-}
-
-.house-card {
-  margin-bottom: 0; /* On gère la marge sur le lien maintenant */
-  cursor: pointer;
-}
-
-/* Effet de zoom sur l'image au survol de la carte-lien */
-.house-card-link:hover .house-img {
-  transform: scale(1.05);
-}
-
-.house-card-link:hover .house-card {
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-  border-color: var(--primary); /* Optionnel : colore la bordure au survol */
-}
-
-/* On s'assure que les boutons d'action restent au-dessus et cliquables */
-.actions {
-  position: relative;
-  z-index: 10;
-}
-
-/* Correction pour mobile : s'assurer que le lien prend bien toute la largeur */
-@media (max-width: 768px) {
-  .house-card-link {
-    margin-bottom: 20px;
-  }
+  .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
+  .row { flex-direction: column; gap: 0; }
+  .house-card-link { margin-bottom: 20px; }
 }
 </style>
