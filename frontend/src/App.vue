@@ -2,7 +2,7 @@
   <div class="container">
     <div v-if="!isAuth" class="login-box">
       <div class="login-content">
-        <h1>SweetHome<span>.privé</span></h1>
+        <h1>Chez nous</h1>
         <p class="login-subtitle">Veuillez saisir votre accès</p>
         
         <div class="login-form">
