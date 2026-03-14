@@ -1,0 +1,18 @@
+# Dépendances
+node_modules/
+.vite/
+
+# Build (fichiers générés)
+dist/
+.next/
+out/
+
+# Variables d'environnement locales (ne jamais envoyer tes secrets !)
+.env
+.env.local
+.env.production
+.env.development
+
+# Fichiers système
+.DS_Store
+Thumbs.db
