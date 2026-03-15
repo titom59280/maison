@@ -44,8 +44,8 @@ export async function POST(request: Request) {
     for (let i = 0; i < data.length; i++) {
       const m = data[i];
       await pool.query(
-        'INSERT INTO maisons (titre, prix, lieu, chambres, surface, lien, image, commentaire, position) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-        [m.titre, m.prix, m.lieu, m.chambres, m.surface, m.lien, m.image, m.commentaire, i]
+        'INSERT INTO maisons (titre, prix, lieu, chambres, surface, lien, image, commentaire, position, statut) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [m.titre, m.prix, m.lieu, m.chambres, m.surface, m.lien, m.image, m.commentaire, i, m.statut]
       );
     }
     return NextResponse.json({ success: true }, { headers: corsHeaders });

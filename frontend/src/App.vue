@@ -62,7 +62,9 @@
                     </div>
                     <span class="price">{{ formatPrix(element.prix) }}€</span>
                   </div>
-                  
+                  <div class="status-badge" :style="{ backgroundColor: getStatusColor(element.statut) }">
+                    {{ element.statut || 'À contacter' }}
+                  </div>
                   <div class="stats">
                     <span><i class="fa-solid fa-bed"></i> {{ element.chambres }} ch.</span>
                     <span><i class="fa-solid fa-house-chimney"></i> {{ element.surface }}m²</span>                    
@@ -101,6 +103,14 @@
           </div>
           <div class="input-group"><label>Lien</label><input v-model="form.lien"></div>
           <div class="input-group"><label>URL Image</label><input v-model="form.image"></div>
+          <div class="input-group">
+            <label>État de la recherche</label>
+            <select v-model="form.statut" class="styled-select">
+              <option v-for="opt in statusOptions" :key="opt.label" :value="opt.label">
+                {{ opt.label }}
+              </option>
+            </select>
+          </div>
           <div class="input-group"><label>Commentaire</label><textarea v-model="form.commentaire"></textarea></div>
         </div>
 
@@ -124,7 +134,14 @@ export default {
       password: '',
       maisons: [],
       showModal: false,
-      form: { id: null, titre: '', prix: '', lieu: '', chambres: 0, surface: '', lien: '', image: '', commentaire: '' },
+      form: { id: null, titre: '', prix: '', lieu: '', chambres: 0, surface: '', lien: '', image: '', commentaire: '', statut: 'À contacter' },
+      statusOptions: [
+        { label: 'À contacter', color: '#64748b' },
+        { label: 'En attente de réponse', color: '#f59e0b' },
+        { label: 'Visite prévue', color: '#3b82f6' },
+        { label: 'Refusé / Vendu', color: '#ef4444' },
+        { label: 'Coup de cœur', color: '#ec4899' }
+      ],
       apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api/maisons',
     };
   },
@@ -143,6 +160,10 @@ export default {
     }
   },
   methods: {
+    getStatusColor(statut) {
+      const option = this.statusOptions.find(o => o.label === statut);
+      return option ? option.color : '#64748b';
+    },
     async verifyPassword(pwd) {
       try {
         const authUrl = this.apiUrl.replace('/maisons', '/verify-auth');
@@ -209,7 +230,7 @@ export default {
     },
     openModal(item = null) {
       if (item) { this.form = { ...item }; } 
-      else { this.form = { id: null, titre: '', prix: '', lieu: '', chambres: 0, surface: '', lien: '', image: '', commentaire: '' }; }
+      else { this.form = { id: null, titre: '', prix: '', lieu: '', chambres: 0, surface: '', lien: '', image: '', commentaire: '', statut: 'À contacter' }; }
       this.showModal = true;
     },
     async save() {
@@ -409,5 +430,31 @@ export default {
   .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 15px; }
   .row { flex-direction: column; gap: 0; }
   .house-card-link { margin-bottom: 20px; }
+}
+.status-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  align-self: flex-start;
+}
+
+/* Style du select dans la modale */
+.styled-select {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+  font-size: 1rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.styled-select:focus {
+  border-color: var(--primary);
 }
 </style>
